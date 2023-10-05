@@ -5,14 +5,17 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
+	"net"
 	"time"
 
+	"github.com/gen4ralz/movie-app/gen"
 	"github.com/gen4ralz/movie-app/pkg/discovery"
 	"github.com/gen4ralz/movie-app/pkg/discovery/consul"
 	"github.com/gen4ralz/movie-app/rating-service/internal/controller/rating"
-	httphandler "github.com/gen4ralz/movie-app/rating-service/internal/handler/http"
+	grpchandler "github.com/gen4ralz/movie-app/rating-service/internal/handler/grpc"
 	"github.com/gen4ralz/movie-app/rating-service/internal/repository/memory"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 const serviceName = "rating"
@@ -49,16 +52,37 @@ func main() {
 	}()
 	defer registry.Deregister(ctx, instanceID, serviceName)
 
+	// Creates a new instance of a memory-based repository for storing rating.
 	repo := memory.New()
 
+	// Creates a controller instance for the rating service, passing in the memory-based repository.
 	ctrl := rating.New(repo)
 
-	h := httphandler.New(ctrl)
+	// Creates a gRPC handler instance, initializing it with the rating controller.
+	h := grpchandler.New(ctrl)
 
-	http.Handle("/rating", http.HandlerFunc(h.Handle))
-
-	err = http.ListenAndServe(":8082", nil)
+	// Creates a TCP listener on the specified port. 
+	// If there's an error creating the listener, logs an error message and terminates the program.
+	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%v", port))
 	if err != nil {
-		panic(err)
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	// Creates a new gRPC server instance.
+	srv := grpc.NewServer()
+
+	// Registers reflection support on the gRPC server, 
+	// which allows clients to dynamically discover the available gRPC services.
+	reflection.Register(srv)
+
+	// Registers the gRPC rating service generated from the gen package with the gRPC server. 
+	// It uses the h (handler) instance to handle incoming gRPC requests.
+	gen.RegisterRatingServiceServer(srv, h)
+
+	// Starts the gRPC server to listen for incoming requests on the previously created listener (lis). 
+	// If there's an error during server startup, it panics.
+	err = srv.Serve(lis)
+	if err != nil {
+		log.Panic(err)
 	}
 }
