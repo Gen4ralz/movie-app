@@ -56,7 +56,7 @@ func main() {
 	repo := memory.New()
 
 	// Creates a controller instance for the rating service, passing in the memory-based repository.
-	ctrl := rating.New(repo)
+	ctrl := rating.New(repo, nil)
 
 	// Creates a gRPC handler instance, initializing it with the rating controller.
 	h := grpchandler.New(ctrl)
