@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"time"
 
 	"github.com/gen4ralz/movie-app/gen"
@@ -16,6 +16,7 @@ import (
 	"github.com/gen4ralz/movie-app/pkg/discovery/consul"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"gopkg.in/yaml.v3"
 )
 
 const serviceName = "metadata"
@@ -23,9 +24,20 @@ const serviceName = "metadata"
 func main() {
 	var port int
 
-	flag.IntVar(&port, "port", 8081, "API handler port")
-	flag.Parse()
+	fi, err := os.Open("base.yaml")
+	if err != nil {
+		panic(err)
+	}
+	defer fi.Close()
 
+	var cfg serviceConfig
+	
+	err = yaml.NewDecoder(fi).Decode(&cfg)
+	if err != nil {
+		panic(err)
+	}
+
+	port = cfg.APIConfig.Port
 
 	log.Printf("Starting the metadata service on port %d", port)
 
@@ -80,9 +92,9 @@ func main() {
 
 	// Creates a TCP listener on the specified port. 
 	// If there's an error creating the listener, logs an error message and terminates the program.
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%v", port))
+	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
 	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
+		log.Fatalf("Failed to listen: %d", err)
 	}
 	
 	// Creates a new gRPC server instance.
