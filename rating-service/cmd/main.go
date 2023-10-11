@@ -13,7 +13,7 @@ import (
 	"github.com/gen4ralz/movie-app/pkg/discovery/consul"
 	"github.com/gen4ralz/movie-app/rating-service/internal/controller/rating"
 	grpchandler "github.com/gen4ralz/movie-app/rating-service/internal/handler/grpc"
-	"github.com/gen4ralz/movie-app/rating-service/internal/repository/memory"
+	"github.com/gen4ralz/movie-app/rating-service/internal/repository/mysql"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -52,8 +52,11 @@ func main() {
 	}()
 	defer registry.Deregister(ctx, instanceID, serviceName)
 
-	// Creates a new instance of a memory-based repository for storing rating.
-	repo := memory.New()
+	// Creates a new instance of a MySQL-based repository for storing rating.
+	repo, err := mysql.New()
+	if err != nil {
+		panic(err)
+	}
 
 	// Creates a controller instance for the rating service, passing in the memory-based repository.
 	ctrl := rating.New(repo, nil)

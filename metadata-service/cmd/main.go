@@ -11,7 +11,7 @@ import (
 	"github.com/gen4ralz/movie-app/gen"
 	"github.com/gen4ralz/movie-app/metadata-service/internal/controller/metadata"
 	grpchandler "github.com/gen4ralz/movie-app/metadata-service/internal/handler/grpc"
-	"github.com/gen4ralz/movie-app/metadata-service/internal/repository/memory"
+	"github.com/gen4ralz/movie-app/metadata-service/internal/repository/mysql"
 	"github.com/gen4ralz/movie-app/pkg/discovery"
 	"github.com/gen4ralz/movie-app/pkg/discovery/consul"
 	"google.golang.org/grpc"
@@ -66,8 +66,11 @@ func main() {
 	// This ensures that the service is deregistered properly even if the program terminates unexpectedly.
 	defer registry.Deregister(ctx, instanceID, serviceName)
 
-	// Creates a new instance of a memory-based repository for storing metadata.
-	repo := memory.New()
+	// Creates a new instance of a MySQL repository for storing metadata.
+	repo, err := mysql.New()
+	if err != nil {
+		panic(err)
+	}
 
 	// Creates a controller instance for the metadata service, passing in the memory-based repository.
 	ctrl := metadata.New(repo)

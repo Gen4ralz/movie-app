@@ -3,6 +3,8 @@ module github.com/gen4ralz/movie-app
 go 1.20
 
 require (
+	github.com/confluentinc/confluent-kafka-go/v2 v2.2.0
+	github.com/go-sql-driver/mysql v1.7.1
 	github.com/hashicorp/consul/api v1.25.1
 	google.golang.org/grpc v1.58.2
 	google.golang.org/protobuf v1.31.0
@@ -10,7 +12,6 @@ require (
 
 require (
 	github.com/armon/go-metrics v0.4.1 // indirect
-	github.com/confluentinc/confluent-kafka-go/v2 v2.2.0 // indirect
 	github.com/fatih/color v1.14.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
